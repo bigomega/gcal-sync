@@ -29,6 +29,9 @@ SCOPES = [
 DRIVE_FOLDER_ID = '10IsYzQmX60XB0PgyIy7_ZF3kwcoH8iTZ'  # Calendar Sync folder
 USE_SHARED_DRIVE = True  # Required for Shared Drives
 
+# Google Calendar ID
+CALENDAR_ID = 'c_ac7393b8d3f127d084622613884cb7b2467816515da9e5a6f7a22ccf5845be42@group.calendar.google.com'
+
 
 def get_credentials():
     """
@@ -111,9 +114,9 @@ def upload_json_to_drive(drive_service, data, filename):
             supportsAllDrives=USE_SHARED_DRIVE  # Required for Shared Drives
         ).execute()
 
-        print(f"✅ Uploaded: {file.get('name')}")
-        print(f"   File ID: {file.get('id')}")
-        print(f"   Link: {file.get('webViewLink')}")
+        print(f"   ✅ Uploaded: {file.get('name')}")
+        print(f"      File ID: {file.get('id')}")
+        print(f"      Link: {file.get('webViewLink')}")
 
         return file.get('id')
     except HttpError as error:
@@ -172,7 +175,7 @@ def main():
     tomorrow = today + timedelta(days=1)
 
     print(f"\nToday: {today.strftime('%A, %B %d, %Y')}")
-    print(f"Fetching events for:")
+    print("Fetching events for:")
     print(f"  - Yesterday: {yesterday.strftime('%A, %B %d, %Y')}")
     print(f"  - Tomorrow: {tomorrow.strftime('%A, %B %d, %Y')}")
     print()
@@ -181,13 +184,10 @@ def main():
     calendar_service = get_calendar_service()
     drive_service = get_drive_service()
 
-    # Calendar ID
-    calendar_id = 'c_ac7393b8d3f127d084622613884cb7b2467816515da9e5a6f7a22ccf5845be42@group.calendar.google.com'
-
     # Fetch events for yesterday
     print("-" * 40)
     print(f"📅 YESTERDAY - {yesterday.strftime('%A, %B %d, %Y')}")
-    yesterday_events = get_events_for_date(calendar_service, calendar_id, yesterday)
+    yesterday_events = get_events_for_date(calendar_service, CALENDAR_ID, yesterday)
 
     if yesterday_events:
         print(f"Found {len(yesterday_events)} event(s)")
@@ -198,18 +198,12 @@ def main():
     print()
     print("-" * 40)
     print(f"📅 TOMORROW - {tomorrow.strftime('%A, %B %d, %Y')}")
-    tomorrow_events = get_events_for_date(calendar_service, calendar_id, tomorrow)
+    tomorrow_events = get_events_for_date(calendar_service, CALENDAR_ID, tomorrow)
 
     if tomorrow_events:
         print(f"Found {len(tomorrow_events)} event(s)")
     else:
         print("No events found")
-
-    # Prepare data for upload
-    total_events = len(yesterday_events) + len(tomorrow_events)
-    print()
-    print("=" * 40)
-    print(f"Total events: {total_events}")
 
     # Create separate JSON files for yesterday (reality) and tomorrow (expectation)
     reality_data = {
@@ -242,26 +236,24 @@ def main():
     uploaded_files = []
 
     # Process reality file (yesterday)
-    print(f"\n1️⃣  Reality file: {reality_filename}")
+    print(f"\n📄  Reality file: {reality_filename}")
     with open(reality_filename, 'w', encoding='utf-8') as f:
         json.dump(reality_data, f, indent=2, ensure_ascii=False)
-    print(f"   ✅ Saved locally")
+    print("   ✅ Saved locally")
 
     file_id = upload_json_to_drive(drive_service, reality_data, reality_filename)
     if file_id:
         uploaded_files.append(reality_filename)
-        print(f"   ✅ Uploaded to Drive")
 
     # Process expectation file (tomorrow)
-    print(f"\n2️⃣  Expectation file: {expectation_filename}")
+    print(f"\n📄  Expectation file: {expectation_filename}")
     with open(expectation_filename, 'w', encoding='utf-8') as f:
         json.dump(expectation_data, f, indent=2, ensure_ascii=False)
-    print(f"   ✅ Saved locally")
+    print("   ✅ Saved locally")
 
     file_id = upload_json_to_drive(drive_service, expectation_data, expectation_filename)
     if file_id:
         uploaded_files.append(expectation_filename)
-        print(f"   ✅ Uploaded to Drive")
 
     # Clean up local files after successful upload
     print()
@@ -277,7 +269,7 @@ def main():
     print()
     print("=" * 40)
     print("✨ Sync completed!")
-    print(f"📊 Uploaded {len(uploaded_files)} file(s) to Drive")
+    print(f"   Uploaded {len(uploaded_files)} file(s) to Drive")
     print("=" * 40)
 
 
